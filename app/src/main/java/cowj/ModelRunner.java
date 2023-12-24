@@ -111,6 +111,15 @@ public interface ModelRunner extends Runnable {
         CronModel cronModel = CronModel.fromConfig(m, m.cron());
         CronModel.schedule(cronModel);
 
+        final String sslKeystore = System.getenv("SSL_KEYSTORE");
+        final String sslPassword = System.getenv("SSL_PASSWORD");
+        if (sslKeystore != null && sslPassword != null) {
+            logger.info("Initializing SSL");
+            secure(sslKeystore, sslPassword, null, null);
+        } else {
+            logger.info("Running without SSL");
+        }
+
         logger.info("Routes mapping are as follows...");
         Map<String, Map<String, String>> paths = m.routes();
         for (String verb : paths.keySet()) {
