@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 record ResponseWrapper(byte[] bodyBytes, int status, Map<String, String> headers) {
@@ -50,6 +51,8 @@ public interface OkHttpWrapper {
      */
     EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, Map<String, String> params, byte[] body);
 
+    Set<String> bodyNotAllowed = Set.of("GET", "DELETE");
+
     /**
      * A DataSource.Creator for the CurlWrapper
      */
@@ -60,7 +63,7 @@ public interface OkHttpWrapper {
             @Override
             public EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, Map<String, String> params, byte[] body) {
                 try {
-                    RequestBody requestBody = RequestBody.create(body);
+                    RequestBody requestBody = bodyNotAllowed.contains(verb.toUpperCase()) ? null : RequestBody.create(body);
                     HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
                     params.forEach(urlBuilder::addQueryParameter);
 
