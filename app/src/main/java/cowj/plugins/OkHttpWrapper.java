@@ -7,12 +7,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-record ResponseWrapper(byte[] bodyBytes, int status, Map<String, String> headers) {
+record ResponseWrapper(byte[] bodyBytes, int status, Map<String, List<String>> headers) {
 }
 
 /**
@@ -76,12 +77,8 @@ public interface OkHttpWrapper {
                     try (Response response = client.newCall(request).execute()) {
                         ResponseBody responseBody = response.body();
                         byte[] bytes = responseBody != null ? responseBody.bytes() : new byte[]{};
-                        Map<String, String> responseHeaders = response.headers().toMultimap()
-                                .entrySet().stream()
-                                .collect(Collectors.toMap(Map.Entry::getKey,
-                                        (entry) -> String.join(",", entry.getValue())
-                                ));
-                        return EitherMonad.value(new ResponseWrapper(bytes, response.code(), responseHeaders));
+
+                        return EitherMonad.value(new ResponseWrapper(bytes, response.code(), response.headers().toMultimap()));
                     }
                 } catch (Throwable t) {
                     logger.error("{} : Error while Sending Request : {}", name, t.toString());
