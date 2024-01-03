@@ -30,27 +30,25 @@ public interface OkHttpWrapper {
      * Sends a payload to a remote server
      *
      * @param verb    HTTP verb ( get, post, etc )
-     * @param url     url, e.g. <a href="http://localhost:5000/abc/def">http://localhost:5000/abc/def</a> is the url
+     * @param url     entire url with encoded query parameters, e.g. http://localhost:5000/abc/def?a=b&c=d
      * @param headers to be sent
-     * @param params  to be sent
      * @param body    to be sent
      * @return EitherMonad of type ResponseWrapper
      */
-    default EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, Map<String, String> params, String body) {
-        return send(verb, url, headers, params, body.getBytes(StandardCharsets.UTF_8));
+    default EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, String body) {
+        return send(verb, url, headers, body.getBytes(StandardCharsets.UTF_8));
     }
 
     /**
      * Sends a payload to a remote server
      *
      * @param verb    HTTP verb ( get, post, etc )
-     * @param url     url, e.g. <a href="http://localhost:5000/abc/def">http://localhost:5000/abc/def</a> is the url
+     * @param url     entire url with encoded query parameters, e.g. http://localhost:5000/abc/def?a=b&c=d
      * @param headers to be sent
-     * @param params  to be sent
      * @param body    to be sent
      * @return EitherMonad of type ResponseWrapper
      */
-    EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, Map<String, String> params, byte[] body);
+    EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, byte[] body);
 
     Set<String> bodyNotAllowed = Set.of("GET", "DELETE");
 
@@ -62,14 +60,12 @@ public interface OkHttpWrapper {
             private final OkHttpClient client = new OkHttpClient();
 
             @Override
-            public EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, Map<String, String> params, byte[] body) {
+            public EitherMonad<ResponseWrapper> send(String verb, String url, Map<String, String> headers, byte[] body) {
                 try {
                     RequestBody requestBody = bodyNotAllowed.contains(verb.toUpperCase()) ? null : RequestBody.create(body);
-                    HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(url)).newBuilder();
-                    params.forEach(urlBuilder::addQueryParameter);
 
                     Request request = new Request.Builder()
-                            .url(urlBuilder.build())
+                            .url(Objects.requireNonNull(HttpUrl.parse(url)))
                             .method(verb, requestBody)
                             .headers(Headers.of(headers))
                             .build();
