@@ -2,7 +2,7 @@ FROM gradle:8.1-jdk17
 
 COPY . .
 
-RUN ["gradle", "build", "-x", "test"]
+RUN ["gradle", "build", "-x", "test", "-x", "javadoc"]
 
 FROM eclipse-temurin:17-jre
 COPY --from=0 /home/gradle/app/build/libs/deps deps/
